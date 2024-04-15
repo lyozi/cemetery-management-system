@@ -36,7 +36,6 @@ namespace Identity.Controllers
             {
                 return Unauthorized("Invalid email or password.");
             }
-
             var roles = await _userManager.GetRolesAsync(user);
             return Ok(roles[0]);
         }

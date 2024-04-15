@@ -192,17 +192,24 @@ namespace WebAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDeceased(long id)
         {
-            var deceased = await _context.DeceasedItems.FindAsync(id);
+            var deceased = await _context.DeceasedItems
+                .Include(d => d.MessageList)
+                .FirstOrDefaultAsync(d => d.Id == id);
+
             if (deceased == null)
             {
                 return NotFound();
             }
 
+            _context.MessageItems.RemoveRange(deceased.MessageList);
+
             _context.DeceasedItems.Remove(deceased);
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
         private bool DeceasedExists(long id)
         {
