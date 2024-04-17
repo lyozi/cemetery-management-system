@@ -6,6 +6,9 @@ using System.Configuration;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Infrastructure.GraveRepo;
+using Infrastructure.DeceasedRepo;
+using Infrastructure.MessageRepo;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +40,10 @@ builder.Services.AddCors(options =>
         builder => builder.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader());
 });
 
+// Repository Pattern DI 
+builder.Services.AddScoped<IGraveRepository, GraveRepository>();
+builder.Services.AddScoped<IDeceasedRepository, DeceasedRepository>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 var app = builder.Build();
 
 // Identity
@@ -69,7 +76,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
 app.UseDefaultFiles();
 app.UseStaticFiles();
 

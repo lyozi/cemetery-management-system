@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Domain.Models;
-using Infrastructure.Context;
-using Microsoft.AspNetCore.Authorization;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Infrastructure.MessageRepo;
 
 namespace WebAPI.Controllers
 {
@@ -15,26 +10,26 @@ namespace WebAPI.Controllers
     [ApiController]
     public class MessagesController : ControllerBase
     {
-        private readonly DatabaseContext _context;
+        private readonly IMessageRepository _messageRepository;
 
-        public MessagesController(DatabaseContext context)
+        public MessagesController(IMessageRepository messageRepository)
         {
-            _context = context;
+            _messageRepository = messageRepository;
         }
 
-        // GET: api/Messages1
+        // GET: api/Messages
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Message>>> GetMessageItems()
         {
-            return await _context.MessageItems.ToListAsync();
+            var messages = await _messageRepository.GetMessagesAsync();
+            return Ok(messages);
         }
 
-        // GET: api/Messages1/5
+        // GET: api/Messages/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Message>> GetMessage(long id)
         {
-            var message = await _context.MessageItems.FindAsync(id);
-
+            var message = await _messageRepository.GetMessageByIdAsync(id);
             if (message == null)
             {
                 return NotFound();
@@ -43,10 +38,8 @@ namespace WebAPI.Controllers
             return message;
         }
 
-        // PUT: api/Messages1/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // PUT: api/Messages/5
         [HttpPut("{id}")]
-        [Authorize(Policy = "Admin")]
         public async Task<IActionResult> PutMessage(long id, Message message)
         {
             if (id != message.Id)
@@ -54,57 +47,29 @@ namespace WebAPI.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(message).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!MessageExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            var updatedMessage = await _messageRepository.UpdateMessageAsync(message);
+            return Ok(updatedMessage);
         }
 
-        // POST: api/Messages1
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // POST: api/Messages
         [HttpPost]
         public async Task<ActionResult<Message>> PostMessage(Message message)
         {
-            _context.MessageItems.Add(message);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetMessage", new { id = message.Id }, message);
+            var createdMessage = await _messageRepository.CreateMessageAsync(message);
+            return CreatedAtAction(nameof(GetMessage), new { id = createdMessage.Id }, createdMessage);
         }
 
-        // DELETE: api/Messages1/5
+        // DELETE: api/Messages/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMessage(long id)
         {
-            var message = await _context.MessageItems.FindAsync(id);
-            if (message == null)
+            var result = await _messageRepository.DeleteMessageAsync(id);
+            if (!result)
             {
                 return NotFound();
             }
 
-            _context.MessageItems.Remove(message);
-            await _context.SaveChangesAsync();
-
             return NoContent();
-        }
-
-        private bool MessageExists(long id)
-        {
-            return _context.MessageItems.Any(e => e.Id == id);
         }
     }
 }

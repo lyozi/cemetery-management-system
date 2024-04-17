@@ -9,6 +9,7 @@ using Domain.Models;
 using Infrastructure.Context;
 using WebAPI.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using Infrastructure.DeceasedRepo;
 
 namespace WebAPI.Controllers
 {
@@ -16,46 +17,40 @@ namespace WebAPI.Controllers
     [ApiController]
     public class DeceasedsController : ControllerBase
     {
-        private readonly DatabaseContext _context;
+        private IDeceasedRepository deceasedRepository;
 
-        public DeceasedsController(DatabaseContext context)
+        public DeceasedsController(IDeceasedRepository deceasedRepository)
         {
-            _context = context;
+            this.deceasedRepository = deceasedRepository;
         }
 
         // GET: api/Deceaseds
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Deceased>>> GetDeceasedItems()
         {
-            return await _context.DeceasedItems.ToListAsync();
+            var deceasedItems = deceasedRepository.GetDeceaseds();
+            return Ok(deceasedItems);
         }
 
         [HttpGet("Search")]
         public async Task<ActionResult<IEnumerable<Deceased>>> SearchDeceasedItems(string? name, int? birthYearAfter, int? deceaseYearBefore, string? orderBy)
         {
-            IQueryable<Deceased> query = _context.DeceasedItems;
+            var query = deceasedRepository.GetDeceaseds();
 
             if (!string.IsNullOrEmpty(name))
             {
                 query = query.Where(d => d.Name.ToUpper().Contains(name.ToUpper()));
             }
 
-            if (birthYearAfter.HasValue)
+            if (birthYearAfter.HasValue && birthYearAfter > 0)
             {
-                if (birthYearAfter.Value > 0)
-                {
-                    query = query.Where(d => d.DateOfBirth.Year >= birthYearAfter);
-                }
+                query = query.Where(d => d.DateOfBirth.Year >= birthYearAfter);
             }
 
-            if (deceaseYearBefore.HasValue)
+            if (deceaseYearBefore.HasValue && deceaseYearBefore > 0)
             {
-                if (deceaseYearBefore.Value > 0)
-                {
-                    query = query.Where(d => d.DateOfDeath.Year <= deceaseYearBefore);
-                }
+                query = query.Where(d => d.DateOfDeath.Year <= deceaseYearBefore);
             }
-
 
             if (!string.IsNullOrEmpty(orderBy))
             {
@@ -83,15 +78,14 @@ namespace WebAPI.Controllers
                         break;
                 }
             }
-
-            var result = await query.ToListAsync();
-            return result;
+            return Ok(query.ToList());
         }
+
 
         [HttpGet("DeceasedsMessages/{id}")]
         public async Task<ActionResult<DeceasedsMessagesDTO>> GetDeceasedMessagesDTO(long id)
         {
-            var deceased = await _context.DeceasedItems.Include(d => d.MessageList).FirstOrDefaultAsync(d => d.Id == id);
+            var deceased = await deceasedRepository.GetDeceasedWithMessagesByID(id);
 
             if (deceased == null)
             {
@@ -108,7 +102,7 @@ namespace WebAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Deceased>> GetDeceased(long id)
         {
-            var deceased = await _context.DeceasedItems.FindAsync(id);
+            var deceased = deceasedRepository.GetDeceasedByID(id);
 
             if (deceased == null)
             {
@@ -121,10 +115,7 @@ namespace WebAPI.Controllers
         [HttpPut("AddMessage/{id}")]
         public async Task<IActionResult> AddMessage(long id, Message message)
         {
-            var deceased = await _context.DeceasedItems
-                .Where(d => d.Id == id)
-                .Include(d => d.MessageList)
-                .FirstOrDefaultAsync();
+            var deceased = await deceasedRepository.GetDeceasedWithMessagesByID(id);
 
             if (deceased == null)
             {
@@ -139,7 +130,7 @@ namespace WebAPI.Controllers
 
                 deceased.MessageList.Add(message);
 
-                await _context.SaveChangesAsync();
+                deceasedRepository.Save();
 
                 return Ok(message);
             }
@@ -156,15 +147,14 @@ namespace WebAPI.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(deceased).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                deceasedRepository.UpdateDeceased(deceased);
+                deceasedRepository.Save();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!DeceasedExists(id))
+                if (deceasedRepository.DeceasedExists(id))
                 {
                     return NotFound();
                 }
@@ -177,43 +167,33 @@ namespace WebAPI.Controllers
             return NoContent();
         }
 
+
         // POST: api/Deceaseds
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Deceased>> PostDeceased(Deceased deceased)
         {
-            _context.DeceasedItems.Add(deceased);
-            await _context.SaveChangesAsync();
+            deceasedRepository.InsertDeceased(deceased);
+            deceasedRepository.Save();
 
-            return CreatedAtAction("GetDeceased", new { id = deceased.Id }, deceased);
+            return CreatedAtAction(nameof(GetDeceased), new { id = deceased.Id }, deceased);
         }
 
         // DELETE: api/Deceaseds/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDeceased(long id)
         {
-            var deceased = await _context.DeceasedItems
-                .Include(d => d.MessageList)
-                .FirstOrDefaultAsync(d => d.Id == id);
+            var deceased = deceasedRepository.GetDeceasedByID(id);
 
             if (deceased == null)
             {
                 return NotFound();
             }
 
-            _context.MessageItems.RemoveRange(deceased.MessageList);
-
-            _context.DeceasedItems.Remove(deceased);
-
-            await _context.SaveChangesAsync();
+            deceasedRepository.DeleteDeceased(id);
+            deceasedRepository.Save();
 
             return NoContent();
-        }
-
-
-        private bool DeceasedExists(long id)
-        {
-            return _context.DeceasedItems.Any(e => e.Id == id);
         }
     }
 }

@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Infrastructure.Context;
 using Domain.Models;
+using Infrastructure.Context;
+using Infrastructure.GraveRepo;
 
 namespace WebAPI.Controllers
 {
@@ -14,36 +15,36 @@ namespace WebAPI.Controllers
     [ApiController]
     public class GravesController : ControllerBase
     {
-        private readonly DatabaseContext _context;
+        private readonly IGraveRepository graveRepository;
 
-        public GravesController(DatabaseContext context)
+        public GravesController(IGraveRepository graveRepository)
         {
-            _context = context;
+            this.graveRepository = graveRepository;
         }
 
         // GET: api/Graves
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Grave>>> GetGraveItems()
         {
-            return await _context.GraveItems.ToListAsync();
+            var graveItems = graveRepository.GetGraves();
+            return Ok(graveItems);
         }
 
         // GET: api/Graves/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Grave>> GetGrave(long id)
         {
-            var grave = await _context.GraveItems.FindAsync(id);
+            var grave = graveRepository.GetGraveByID(id);
 
             if (grave == null)
             {
                 return NotFound();
             }
 
-            return grave;
+            return Ok(grave);
         }
 
         // PUT: api/Graves/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutGrave(long id, Grave grave)
         {
@@ -52,15 +53,14 @@ namespace WebAPI.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(grave).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                graveRepository.UpdateGrave(grave);
+                graveRepository.Save();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!GraveExists(id))
+                if (!graveRepository.GraveExists(id))
                 {
                     return NotFound();
                 }
@@ -74,12 +74,11 @@ namespace WebAPI.Controllers
         }
 
         // POST: api/Graves
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Grave>> PostGrave(Grave grave)
         {
-            _context.GraveItems.Add(grave);
-            await _context.SaveChangesAsync();
+            graveRepository.InsertGrave(grave);
+            graveRepository.Save();
 
             return CreatedAtAction(nameof(GetGrave), new { id = grave.Id }, grave);
         }
@@ -88,32 +87,30 @@ namespace WebAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGrave(long id)
         {
-            var grave = await _context.GraveItems.FindAsync(id);
+            var grave = graveRepository.GetGraveByID(id);
             if (grave == null)
             {
                 return NotFound();
             }
 
-            _context.GraveItems.Remove(grave);
-            await _context.SaveChangesAsync();
+            graveRepository.DeleteGrave(id);
+            graveRepository.Save();
 
             return NoContent();
         }
 
-        // DELETE: api/Graves/5
+        // DELETE: api/Graves
         [HttpDelete]
         public async Task<IActionResult> DeleteGraves()
         {
-            var allGraveItems = await _context.GraveItems.ToListAsync();
-            _context.GraveItems.RemoveRange(allGraveItems);
-            await _context.SaveChangesAsync();
+            var allGraveItems = graveRepository.GetGraves();
+            foreach (var grave in allGraveItems)
+            {
+                graveRepository.DeleteGrave(grave.Id);
+            }
+            graveRepository.Save();
 
             return NoContent();
-        }
-
-        private bool GraveExists(long id)
-        {
-            return _context.GraveItems.Any(e => e.Id == id);
         }
     }
 }
