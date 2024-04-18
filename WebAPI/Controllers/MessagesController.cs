@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Infrastructure.MessageRepo;
+using Domain.Services;
 
 namespace WebAPI.Controllers
 {
@@ -10,18 +10,18 @@ namespace WebAPI.Controllers
     [ApiController]
     public class MessagesController : ControllerBase
     {
-        private readonly IMessageRepository _messageRepository;
+        private readonly IMessageService _messagesService;
 
-        public MessagesController(IMessageRepository messageRepository)
+        public MessagesController(IMessageService messagesService)
         {
-            _messageRepository = messageRepository;
+            _messagesService = messagesService;
         }
 
         // GET: api/Messages
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Message>>> GetMessageItems()
         {
-            var messages = await _messageRepository.GetMessagesAsync();
+            var messages = await _messagesService.GetMessagesAsync();
             return Ok(messages);
         }
 
@@ -29,7 +29,7 @@ namespace WebAPI.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Message>> GetMessage(long id)
         {
-            var message = await _messageRepository.GetMessageByIdAsync(id);
+            var message = await _messagesService.GetMessageByIdAsync(id);
             if (message == null)
             {
                 return NotFound();
@@ -47,7 +47,7 @@ namespace WebAPI.Controllers
                 return BadRequest();
             }
 
-            var updatedMessage = await _messageRepository.UpdateMessageAsync(message);
+            var updatedMessage = await _messagesService.UpdateMessageAsync(message);
             return Ok(updatedMessage);
         }
 
@@ -55,7 +55,7 @@ namespace WebAPI.Controllers
         [HttpPost]
         public async Task<ActionResult<Message>> PostMessage(Message message)
         {
-            var createdMessage = await _messageRepository.CreateMessageAsync(message);
+            var createdMessage = await _messagesService.CreateMessageAsync(message);
             return CreatedAtAction(nameof(GetMessage), new { id = createdMessage.Id }, createdMessage);
         }
 
@@ -63,7 +63,7 @@ namespace WebAPI.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMessage(long id)
         {
-            var result = await _messageRepository.DeleteMessageAsync(id);
+            var result = await _messagesService.DeleteMessageAsync(id);
             if (!result)
             {
                 return NotFound();

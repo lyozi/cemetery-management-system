@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Context
 {
-    public class DatabaseContext : IdentityDbContext<IdentityUser>
+    public class DatabaseContext : IdentityDbContext
     {
         public DatabaseContext(DbContextOptions<DatabaseContext> options)
         : base(options)

@@ -5,6 +5,7 @@ using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Context;
 using Domain.Models;
+using Domain.RepositoryInterfaces;
 
 namespace Infrastructure.GraveRepo
 {

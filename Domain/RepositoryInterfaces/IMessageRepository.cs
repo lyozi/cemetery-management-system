@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Infrastructure.MessageRepo
+namespace Domain.RepositoryInterfaces
 {
     public interface IMessageRepository
     {

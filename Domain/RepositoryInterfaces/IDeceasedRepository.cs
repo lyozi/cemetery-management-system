@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Infrastructure.DeceasedRepo
+namespace Domain.RepositoryInterfaces
 {
     public interface IDeceasedRepository : IDisposable
     {

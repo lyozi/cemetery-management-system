@@ -9,6 +9,9 @@ using Microsoft.AspNetCore.Mvc;
 using Infrastructure.GraveRepo;
 using Infrastructure.DeceasedRepo;
 using Infrastructure.MessageRepo;
+using Domain.RepositoryInterfaces;
+using Domain.Services;
+using Domain.ServiceInterfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +47,15 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IGraveRepository, GraveRepository>();
 builder.Services.AddScoped<IDeceasedRepository, DeceasedRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+
+// Service DI
+builder.Services.AddScoped<IDeceasedService, DeceasedService>();
+builder.Services.AddScoped<IGravesService, GravesService>();
+builder.Services.AddScoped<IMessageService, MessageService>();
+
+// Ez elott lehet csak használni a builder.Services-t
 var app = builder.Build();
+
 
 // Identity
 app.MapIdentityApi<IdentityUser>();

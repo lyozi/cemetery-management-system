@@ -1,8 +1,6 @@
 ﻿using Domain.Models;
-using System;
-using System.Collections.Generic;
 
-namespace Infrastructure.GraveRepo
+namespace Domain.RepositoryInterfaces
 {
     public interface IGraveRepository : IDisposable
     {
