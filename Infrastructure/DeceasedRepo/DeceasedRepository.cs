@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Infrastructure.Context;
 using Domain.Models;
 using Domain.RepositoryInterfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Infrastructure.DeceasedRepo
 {

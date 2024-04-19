@@ -12,25 +12,11 @@ using Infrastructure.MessageRepo;
 using Domain.RepositoryInterfaces;
 using Domain.Services;
 using Domain.ServiceInterfaces;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-builder.Services.AddDbContext<DatabaseContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Infrastructure")));
-
-// identity-hez
-builder.Services.AddAuthorization();
-builder.Services.AddIdentityApiEndpoints<IdentityUser>()
-    .AddRoles<IdentityRole>()
-    .AddEntityFrameworkStores<DatabaseContext>();
-
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("Manager", policy => policy.RequireRole("Admin", "Manager"));
-    options.AddPolicy("Member", policy => policy.RequireRole("Member"));
-});
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -40,7 +26,33 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowOrigin",
-        builder => builder.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader());
+        builder => builder.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+});
+
+// Cookie
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.HttpOnly = false;
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+
+// DbContext regisztrálása
+builder.Services.AddDbContext<DatabaseContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Infrastructure")));
+ 
+// identity-hez
+builder.Services.AddAuthorization();
+builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<DatabaseContext>();
+
+// Policyk
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("Manager", policy => policy.RequireRole("Admin", "Manager"));
+    options.AddPolicy("Member", policy => policy.RequireRole("Member", "Admin", "Manager"));
 });
 
 // Repository Pattern DI 
@@ -56,10 +68,7 @@ builder.Services.AddScoped<IMessageService, MessageService>();
 // Ez elott lehet csak használni a builder.Services-t
 var app = builder.Build();
 
-
-// Identity
-app.MapIdentityApi<IdentityUser>();
-
+// Role-ok létrehozása
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -74,19 +83,16 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Sajat logout endpoint
-app.MapPost("/logout", async (HttpContext httpContext, SignInManager<IdentityUser> signInManager) =>
-{
-    await signInManager.SignOutAsync();
-    return Results.Ok();
-});
-
 // Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Identity
+app.MapIdentityApi<IdentityUser>();
+
 app.UseDefaultFiles();
 app.UseStaticFiles();
 

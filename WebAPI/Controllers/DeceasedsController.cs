@@ -71,6 +71,7 @@ namespace WebAPI.Controllers
             return Ok(message);
         }
 
+        [Authorize(Policy = "Manager")]
         [HttpPut("{id}")]
         public IActionResult PutDeceased(long id, Deceased deceased)
         {
@@ -98,6 +99,7 @@ namespace WebAPI.Controllers
             return NoContent();
         }
 
+        [Authorize(Policy = "Manager")]
         [HttpPost]
         public ActionResult<Deceased> PostDeceased(Deceased deceased)
         {
@@ -105,6 +107,7 @@ namespace WebAPI.Controllers
             return CreatedAtAction(nameof(GetDeceased), new { id = deceased.Id }, deceased);
         }
 
+        [Authorize(Policy = "Manager")]
         [HttpDelete("{id}")]
         public IActionResult DeleteDeceased(long id)
         {
