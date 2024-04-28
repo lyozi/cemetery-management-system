@@ -107,5 +107,16 @@ namespace WebAPI.Controllers
 
             return NoContent();
         }
+
+        [HttpGet("Polygons/{id}")]
+        public IActionResult GetGraveFromPolygonId(long id)
+        {
+            var grave = _gravesService.GetGraveFromPolygonId(id);
+            if (grave == null)
+            {
+                return NotFound();
+            }
+            return Ok(grave);
+        }
     }
 }

@@ -35,8 +35,23 @@ namespace Infrastructure.GraveRepo
 
         public void DeleteGrave(long deceasedID)
         {
-            Grave deceased = context.GraveItems.Find(deceasedID);
-            context.GraveItems.Remove(deceased);
+            var grave = context.GraveItems
+                              .Include(g => g.DeceasedList)
+                              .Include(g => g.GraveUIPolygon)
+                              .SingleOrDefault(g => g.Id == deceasedID);
+
+            if (grave == null)
+            {
+                throw new Exception("A megadott sír nem található.");
+            }
+
+            grave.DeceasedList = null;
+            grave.GraveUIPolygon = null;
+
+            Save();
+
+            context.GraveItems.Remove(grave);
+            Save();
         }
 
         public void UpdateGrave(Grave deceased)
@@ -72,6 +87,13 @@ namespace Infrastructure.GraveRepo
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public Grave GetGraveFromPolygonId(long id)
+        {
+            return context.GraveItems
+                          .Include(g => g.DeceasedList)
+                          .FirstOrDefault(g => g.GraveUIPolygon != null && g.GraveUIPolygon.Id == id);
         }
     }
 }

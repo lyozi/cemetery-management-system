@@ -37,14 +37,25 @@ namespace Infrastructure.DeceasedRepo
 
         public void InsertDeceased(Deceased deceased)
         {
-            context.DeceasedItems.Add(deceased);
         }
 
         public void DeleteDeceased(long deceasedID)
         {
-            Deceased deceased = context.DeceasedItems.Find(deceasedID);
-            context.DeceasedItems.Remove(deceased);
+            Deceased deceased = context.DeceasedItems
+                                    .Include(d => d.MessageList)
+                                    .FirstOrDefault(d => d.Id == deceasedID);
+
+            if (deceased != null)
+            {
+                if (deceased.MessageList != null)
+                {
+                    context.MessageItems.RemoveRange(deceased.MessageList);
+                }
+                context.DeceasedItems.Remove(deceased);
+                Save();
+            }
         }
+
 
         public void UpdateDeceased(Deceased deceased)
         {

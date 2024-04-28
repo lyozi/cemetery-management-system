@@ -46,5 +46,10 @@ namespace Domain.Services
         {
             return _graveRepository.GraveExists(id);
         }
+
+        public Grave GetGraveFromPolygonId(long id)
+        {
+            return _graveRepository.GetGraveFromPolygonId(id);
+        }
     }
 }

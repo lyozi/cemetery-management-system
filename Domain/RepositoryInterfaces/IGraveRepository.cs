@@ -10,6 +10,7 @@ namespace Domain.RepositoryInterfaces
         void DeleteGrave(long graveID);
         void UpdateGrave(Grave grave);
         bool GraveExists(long id);
+        Grave GetGraveFromPolygonId(long id);
         void Save();
     }
 }
