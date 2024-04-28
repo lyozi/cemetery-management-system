@@ -10,8 +10,9 @@ namespace Domain.Models
     public class GraveUIPolygon
     {
         public long Id { get; set; }
-        public List<Point> LatLngs { get; set; }
-        public long? GraveId { get; set; }
+        public required List<Point> LatLngs { get; set; }
+        public long? GraveId { get; set; } = null;
+        public Grave? Grave { get; set; } = null;
     }
 
     public class Point

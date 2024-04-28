@@ -27,9 +27,21 @@ namespace WebAPI.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<GraveUIPolygon>>> GetGraveUIPolygons()
         {
-            return await _context.GraveUIPolygons
+            try
+            {
+                var polygons = await _context.GraveUIPolygons
                 .Include(polygon => polygon.LatLngs)
+                .Include(polygon => polygon.Grave)
+                .ThenInclude(g => g.DeceasedList)
                 .ToListAsync();
+
+                return polygons;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+                return null;
+            }
         }
 
 

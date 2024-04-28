@@ -23,6 +23,6 @@ namespace Domain.Models
 
         // public byte[] Image { get; set; } = new byte[0];
 
-        public ICollection<Deceased>? DeceasedList { get; set; } = null;
+        public ICollection<Deceased>? DeceasedList { get; set; } = new List<Deceased>();
     }
 }
