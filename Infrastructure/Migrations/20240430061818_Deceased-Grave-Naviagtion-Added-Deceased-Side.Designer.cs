@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20240430061818_Deceased-Grave-Naviagtion-Added-Deceased-Side")]
+    partial class DeceasedGraveNaviagtionAddedDeceasedSide
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,16 +39,16 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("DateOfDeath")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("GraveId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<long>("graveId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("GraveId");
+                    b.HasIndex("graveId");
 
                     b.ToTable("DeceasedItems");
                 });
@@ -347,7 +350,9 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("Domain.Models.Grave", "Grave")
                         .WithMany("DeceasedList")
-                        .HasForeignKey("GraveId");
+                        .HasForeignKey("graveId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Grave");
                 });

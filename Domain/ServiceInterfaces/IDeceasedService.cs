@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Domain.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Domain.ServiceInterfaces
 {
@@ -13,7 +14,7 @@ namespace Domain.ServiceInterfaces
         Deceased GetDeceasedByID(long id);
         Task<Deceased> GetDeceasedWithMessagesByID(long id);
         void AddMessageToDeceased(long id, Message message);
-        void InsertDeceased(Deceased deceased);
+        bool InsertDeceased(Deceased deceased);
         void UpdateDeceased(Deceased deceased);
         void DeleteDeceased(long id);
         bool DeceasedExists(long id);

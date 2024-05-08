@@ -99,10 +99,11 @@ namespace Domain.Services
             }
         }
 
-        public void InsertDeceased(Deceased deceased)
+        public bool InsertDeceased(Deceased deceased)
         {
-            _deceasedRepository.InsertDeceased(deceased);
+            bool isSuccessful = _deceasedRepository.InsertDeceased(deceased);
             _deceasedRepository.Save();
+            return isSuccessful;
         }
 
         public void UpdateDeceased(Deceased deceased)

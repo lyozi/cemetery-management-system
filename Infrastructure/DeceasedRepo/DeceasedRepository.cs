@@ -35,8 +35,19 @@ namespace Infrastructure.DeceasedRepo
             return deceased;
         }
 
-        public void InsertDeceased(Deceased deceased)
+        public bool InsertDeceased(Deceased deceased)
         {
+            try
+            {
+                context.DeceasedItems.Add(deceased);
+                Save();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Hiba történt az elhunyt hozzáadása során: {ex.Message}");
+                return false;
+            }
         }
 
         public void DeleteDeceased(long deceasedID)

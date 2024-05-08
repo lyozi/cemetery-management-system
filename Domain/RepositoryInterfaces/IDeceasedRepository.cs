@@ -12,7 +12,7 @@ namespace Domain.RepositoryInterfaces
         IEnumerable<Deceased> GetDeceaseds();
         Deceased GetDeceasedByID(long deceasedId);
         public Task<Deceased> GetDeceasedWithMessagesByID(long id);
-        void InsertDeceased(Deceased deceased);
+        bool InsertDeceased(Deceased deceased);
         void DeleteDeceased(long deceasedID);
         void UpdateDeceased(Deceased deceased);
         public bool DeceasedExists(long id);

@@ -13,7 +13,6 @@ namespace WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Policy = "Admin")]
     public class GraveUIPolygonsController : ControllerBase
     {
         private readonly DatabaseContext _context;
@@ -122,6 +121,11 @@ namespace WebAPI.Controllers
             {
                 _context.Points.Remove(point);
             });
+
+            graveUIPolygon.Grave = null;
+            graveUIPolygon.GraveId = null;
+
+            _context.SaveChanges();
 
             _context.GraveUIPolygons.Remove(graveUIPolygon);
             await _context.SaveChangesAsync();
