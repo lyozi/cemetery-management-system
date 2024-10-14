@@ -21,7 +21,7 @@ namespace Infrastructure.DeceasedRepo
 
         public IEnumerable<Deceased> GetDeceaseds()
         {
-            return context.DeceasedItems.ToList();
+            return context.DeceasedItems.Include(d => d.Grave).ToList();
         }
 
         public Deceased GetDeceasedByID(long id)

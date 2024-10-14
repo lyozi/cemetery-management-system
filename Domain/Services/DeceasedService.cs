@@ -25,7 +25,6 @@ namespace Domain.Services
 
         public IEnumerable<Deceased> SearchDeceaseds(string name, int? birthYearAfter, int? deceaseYearBefore, string orderBy)
         {
-            // Itt végezd el a szűrést és rendezést, amit korábban a controllerben csináltál
             var query = _deceasedRepository.GetDeceaseds();
 
             if (!string.IsNullOrEmpty(name))
