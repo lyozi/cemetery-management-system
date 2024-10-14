@@ -10,13 +10,14 @@ using System.Xml.Linq;
 
 namespace Domain.Models
 {
-    [Index(nameof(Number), IsUnique = true)]
     public class Grave
     {
         [Key]
         public long Id { get; set; }
-        public short Number { get; set; }
-        public short Type { get; set; } = 0;
+        public char Table { get; set; } = 'Z';
+        public short Row { get; set; }
+        public short Parcel { get; set; }
+        public short Type { get; set; }
 
         // Koordináták
         public GraveUIPolygon? GraveUIPolygon { get; set; } = null;
