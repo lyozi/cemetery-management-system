@@ -13,5 +13,6 @@ namespace Domain.Models
         public string Author { get; set; } = string.Empty;
         public string Text { get; set; } = string.Empty;
         public DateTime DateOfCreation { get; set; }
+        public long DeceasedId { get; set; }
     }
 }

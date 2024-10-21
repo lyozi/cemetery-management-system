@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Domain.Models;
-using WebAPI.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Domain.ServiceInterfaces;
+using Domain.DTOs;
 
 namespace WebAPI.Controllers
 {
@@ -101,10 +96,18 @@ namespace WebAPI.Controllers
 
         [Authorize(Policy = "Manager")]
         [HttpPost]
-        public ActionResult<Deceased> PostDeceased(Deceased deceased)
+        public ActionResult<Deceased> PostDeceased(DeceasedDataDTO deceasedData)
         {
-            _deceasedService.InsertDeceased(deceased);
+            var deceased = _deceasedService.CreateDeceased(deceasedData);
             return CreatedAtAction(nameof(GetDeceased), new { id = deceased.Id }, deceased);
+        }
+
+        [Authorize(Policy = "Manager")]
+        [HttpPost("BulkAdd")]
+        public ActionResult<IEnumerable<Deceased>> PostDeceaseds(IEnumerable<DeceasedDataDTO> deceasedDataList)
+        {
+            var deceasedList = _deceasedService.CreateDeceaseds(deceasedDataList);
+            return CreatedAtAction(nameof(GetDeceasedItems), deceasedList);
         }
 
         [Authorize(Policy = "Manager")]

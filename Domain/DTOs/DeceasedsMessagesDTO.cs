@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Domain.Models;
+﻿using Domain.Models;
 
-namespace WebAPI.DTOs
+namespace Domain.DTOs
 {
     public class DeceasedsMessagesDTO
     {

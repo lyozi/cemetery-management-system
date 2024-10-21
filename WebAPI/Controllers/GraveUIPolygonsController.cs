@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Domain.Models;
 using Infrastructure.Context;
 using Microsoft.AspNetCore.Authorization;
+using Domain.ServiceInterfaces;
+using Domain.Services;
+using Domain.DTOs;
 
 namespace WebAPI.Controllers
 {
@@ -16,10 +19,12 @@ namespace WebAPI.Controllers
     public class GraveUIPolygonsController : ControllerBase
     {
         private readonly DatabaseContext _context;
+        private readonly IGravesService _gravesService;
 
-        public GraveUIPolygonsController(DatabaseContext context)
+        public GraveUIPolygonsController(DatabaseContext context, IGravesService gravesService)
         {
             _context = context;
+            _gravesService = gravesService;
         }
 
         // GET: api/GraveUIPolygons
@@ -36,7 +41,7 @@ namespace WebAPI.Controllers
 
                 return polygons;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
                 return null;
@@ -92,20 +97,21 @@ namespace WebAPI.Controllers
             return NoContent();
         }
 
-
-
         [HttpPost]
-        public async Task<ActionResult<GraveUIPolygon>> PostGraveUIPolygon(GraveUIPolygon graveUIPolygon)
+        public async Task<ActionResult<GraveUIPolygon>> PostGraveUIPolygonAndGrave(GravePositionDataDTO dto)
         {
-            if (graveUIPolygon.LatLngs == null || graveUIPolygon.LatLngs.Count != 4)
+            var grave = _gravesService.GetOrCreateGrave(dto.Table, dto.Row, dto.Parcel);
+
+            var graveUIPolygon = new GraveUIPolygon
             {
-                return BadRequest("A GraveUIPolygon objektumnak pontosan 4 ponttal kell rendelkeznie.");
-            }
+                LatLngs = dto.LatLngs,
+                GraveId = grave.Id
+            };
 
             _context.GraveUIPolygons.Add(graveUIPolygon);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetGraveUIPolygon", new { id = graveUIPolygon.Id }, graveUIPolygon);
+            return CreatedAtAction(nameof(GetGraveUIPolygon), new { id = graveUIPolygon.Id }, graveUIPolygon);
         }
 
         [HttpDelete("{id}")]
@@ -116,16 +122,6 @@ namespace WebAPI.Controllers
             {
                 return NotFound();
             }
-
-            await _context.Points.Where(p => p.GraveUIPolygonId == id).ForEachAsync(point =>
-            {
-                _context.Points.Remove(point);
-            });
-
-            graveUIPolygon.Grave = null;
-            graveUIPolygon.GraveId = null;
-
-            _context.SaveChanges();
 
             _context.GraveUIPolygons.Remove(graveUIPolygon);
             await _context.SaveChangesAsync();

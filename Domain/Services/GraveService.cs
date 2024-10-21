@@ -47,6 +47,23 @@ namespace Domain.Services
             return _graveRepository.GraveExists(id);
         }
 
+        public Grave GetOrCreateGrave(char table, short row, short parcel)
+        {
+            var grave = _graveRepository.GetGraveByTableRowParcel(table, row, parcel);
+            if (grave == null)
+            {
+                grave = new Grave
+                {
+                    Table = table,
+                    Row = row,
+                    Parcel = parcel
+                };
+                _graveRepository.InsertGrave(grave);
+                _graveRepository.Save();
+            }
+            return grave;
+        }
+
         public Grave GetGraveFromPolygonId(long id)
         {
             return _graveRepository.GetGraveFromPolygonId(id);

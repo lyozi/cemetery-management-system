@@ -10,6 +10,7 @@ namespace Domain.ServiceInterfaces
         void UpdateGrave(Grave grave);
         void DeleteGrave(long id);
         bool GraveExists(long id);
+        Grave GetOrCreateGrave(char table, short row, short parcel);
         Grave GetGraveFromPolygonId(long id);
     }
 }

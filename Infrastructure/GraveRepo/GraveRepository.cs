@@ -33,26 +33,22 @@ namespace Infrastructure.GraveRepo
             context.GraveItems.Add(deceased);
         }
 
-        public void DeleteGrave(long deceasedID)
+        public void DeleteGrave(long graveID)
         {
             var grave = context.GraveItems
                               .Include(g => g.DeceasedList)
                               .Include(g => g.GraveUIPolygon)
-                              .SingleOrDefault(g => g.Id == deceasedID);
+                              .SingleOrDefault(g => g.Id == graveID);
 
             if (grave == null)
             {
-                throw new Exception("A megadott sír nem található.");
+                throw new Exception("The specified grave was not found.");
             }
-
-            grave.DeceasedList = null;
-            grave.GraveUIPolygon = null;
-
-            Save();
 
             context.GraveItems.Remove(grave);
             Save();
         }
+
 
         public void UpdateGrave(Grave deceased)
         {
@@ -87,6 +83,11 @@ namespace Infrastructure.GraveRepo
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public Grave GetGraveByTableRowParcel(char table, short row, short parcel)
+        {
+            return context.GraveItems.SingleOrDefault(g => g.Table == table && g.Row == row && g.Parcel == parcel);
         }
 
         public Grave GetGraveFromPolygonId(long id)

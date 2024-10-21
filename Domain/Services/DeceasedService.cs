@@ -2,20 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Domain.DTOs;
 using Domain.Models;
 using Domain.RepositoryInterfaces;
 using Domain.ServiceInterfaces;
-
 
 namespace Domain.Services
 {
     public class DeceasedService : IDeceasedService
     {
         private readonly IDeceasedRepository _deceasedRepository;
+        private readonly IGravesService _gravesService;
 
-        public DeceasedService(IDeceasedRepository deceasedRepository)
+        public DeceasedService(IDeceasedRepository deceasedRepository, IGravesService gravesService)
         {
             _deceasedRepository = deceasedRepository;
+            _gravesService = gravesService;
         }
 
         public IEnumerable<Deceased> GetDeceaseds()
@@ -120,6 +122,34 @@ namespace Domain.Services
         public bool DeceasedExists(long id)
         {
             return _deceasedRepository.DeceasedExists(id);
+        }
+
+        public Deceased CreateDeceased(DeceasedDataDTO deceasedData)
+        {
+            Grave deceasedsGrave = _gravesService.GetOrCreateGrave(deceasedData.GraveTable, deceasedData.GraveRow, deceasedData.GraveParcel);
+            var deceased = new Deceased
+            {
+                Name = deceasedData.Name,
+                DateOfDeath = deceasedData.DateOfDeath,
+                DateOfBirth = deceasedData.DateOfBirth,
+                Grave = deceasedsGrave,
+                GraveId = deceasedsGrave.Id
+            };
+            InsertDeceased(deceased);
+            return deceased;
+        }
+
+        public IEnumerable<Deceased> CreateDeceaseds(IEnumerable<DeceasedDataDTO> deceasedDataList)
+        {
+            var deceasedList = new List<Deceased>();
+
+            foreach (var deceasedData in deceasedDataList)
+            {
+                var deceased = CreateDeceased(deceasedData);
+                deceasedList.Add(deceased);
+            }
+
+            return deceasedList;
         }
     }
 }

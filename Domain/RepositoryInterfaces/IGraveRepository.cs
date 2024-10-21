@@ -11,6 +11,7 @@ namespace Domain.RepositoryInterfaces
         void UpdateGrave(Grave grave);
         bool GraveExists(long id);
         Grave GetGraveFromPolygonId(long id);
+        Grave GetGraveByTableRowParcel(char table, short row, short parcel);
         void Save();
     }
 }

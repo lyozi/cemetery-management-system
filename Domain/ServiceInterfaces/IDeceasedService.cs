@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Domain.DTOs;
 using Domain.Models;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -18,5 +19,8 @@ namespace Domain.ServiceInterfaces
         void UpdateDeceased(Deceased deceased);
         void DeleteDeceased(long id);
         bool DeceasedExists(long id);
+        Deceased CreateDeceased(DeceasedDataDTO deceasedData);
+        IEnumerable<Deceased> CreateDeceaseds(IEnumerable<DeceasedDataDTO> deceasedDataList);
+
     }
 }
