@@ -11,7 +11,12 @@ namespace Domain.ServiceInterfaces
     public interface IDeceasedService
     {
         IEnumerable<Deceased> GetDeceaseds();
-        IEnumerable<Deceased> SearchDeceaseds(string name, int? birthYearAfter, int? deceaseYearBefore, string orderBy);
+        (IEnumerable<Deceased> Items, int TotalCount) SearchDeceaseds(string name,
+        int? birthYearAfter,
+        int? deceaseYearBefore,
+        string orderBy,
+        int pageNumber,
+        int pageSize);
         Deceased GetDeceasedByID(long id);
         Task<Deceased> GetDeceasedWithMessagesByID(long id);
         void AddMessageToDeceased(long id, Message message);

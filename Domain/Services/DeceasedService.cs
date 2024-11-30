@@ -9,147 +9,160 @@ using Domain.ServiceInterfaces;
 
 namespace Domain.Services
 {
-    public class DeceasedService : IDeceasedService
+  public class DeceasedService : IDeceasedService
+  {
+    private readonly IDeceasedRepository _deceasedRepository;
+    private readonly IGravesService _gravesService;
+
+    public DeceasedService(IDeceasedRepository deceasedRepository, IGravesService gravesService)
     {
-        private readonly IDeceasedRepository _deceasedRepository;
-        private readonly IGravesService _gravesService;
-
-        public DeceasedService(IDeceasedRepository deceasedRepository, IGravesService gravesService)
-        {
-            _deceasedRepository = deceasedRepository;
-            _gravesService = gravesService;
-        }
-
-        public IEnumerable<Deceased> GetDeceaseds()
-        {
-            return _deceasedRepository.GetDeceaseds();
-        }
-
-        public IEnumerable<Deceased> SearchDeceaseds(string name, int? birthYearAfter, int? deceaseYearBefore, string orderBy)
-        {
-            var query = _deceasedRepository.GetDeceaseds();
-
-            if (!string.IsNullOrEmpty(name))
-            {
-                query = query.Where(d => d.Name.ToUpper().Contains(name.ToUpper()));
-            }
-
-            if (birthYearAfter.HasValue && birthYearAfter > 0)
-            {
-                query = query.Where(d => d.DateOfBirth.Year >= birthYearAfter);
-            }
-
-            if (deceaseYearBefore.HasValue && deceaseYearBefore > 0)
-            {
-                query = query.Where(d => d.DateOfDeath.Year <= deceaseYearBefore);
-            }
-
-            if (!string.IsNullOrEmpty(orderBy))
-            {
-                switch (orderBy.ToLower())
-                {
-                    case "name_asc":
-                        query = query.OrderBy(d => d.Name);
-                        break;
-                    case "name_desc":
-                        query = query.OrderByDescending(d => d.Name);
-                        break;
-                    case "dateofdeath_asc":
-                        query = query.OrderBy(d => d.DateOfDeath);
-                        break;
-                    case "dateofdeath_desc":
-                        query = query.OrderByDescending(d => d.DateOfDeath);
-                        break;
-                    case "dateofbirth_asc":
-                        query = query.OrderBy(d => d.DateOfBirth);
-                        break;
-                    case "dateofbirth_desc":
-                        query = query.OrderByDescending(d => d.DateOfBirth);
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            return query.ToList();
-        }
-
-        public Deceased GetDeceasedByID(long id)
-        {
-            return _deceasedRepository.GetDeceasedByID(id);
-        }
-
-        public async Task<Deceased> GetDeceasedWithMessagesByID(long id)
-        {
-            return await _deceasedRepository.GetDeceasedWithMessagesByID(id);
-        }
-
-        public void AddMessageToDeceased(long id, Message message)
-        {
-            var deceased = _deceasedRepository.GetDeceasedByID(id);
-            if (deceased != null)
-            {
-                if (deceased.MessageList == null)
-                {
-                    deceased.MessageList = new List<Message>();
-                }
-
-                deceased.MessageList.Add(message);
-
-                _deceasedRepository.Save();
-            }
-        }
-
-        public bool InsertDeceased(Deceased deceased)
-        {
-            bool isSuccessful = _deceasedRepository.InsertDeceased(deceased);
-            _deceasedRepository.Save();
-            return isSuccessful;
-        }
-
-        public void UpdateDeceased(Deceased deceased)
-        {
-            _deceasedRepository.UpdateDeceased(deceased);
-            _deceasedRepository.Save();
-        }
-
-        public void DeleteDeceased(long id)
-        {
-            _deceasedRepository.DeleteDeceased(id);
-            _deceasedRepository.Save();
-        }
-
-        public bool DeceasedExists(long id)
-        {
-            return _deceasedRepository.DeceasedExists(id);
-        }
-
-        public Deceased CreateDeceased(DeceasedDataDTO deceasedData)
-        {
-            Grave deceasedsGrave = _gravesService.GetOrCreateGrave(deceasedData.GraveTable, deceasedData.GraveRow, deceasedData.GraveParcel);
-            var deceased = new Deceased
-            {
-                Name = deceasedData.Name,
-                DateOfDeath = deceasedData.DateOfDeath,
-                DateOfBirth = deceasedData.DateOfBirth,
-                Grave = deceasedsGrave,
-                GraveId = deceasedsGrave.Id
-            };
-            InsertDeceased(deceased);
-            return deceased;
-        }
-
-        public IEnumerable<Deceased> CreateDeceaseds(IEnumerable<DeceasedDataDTO> deceasedDataList)
-        {
-            var deceasedList = new List<Deceased>();
-
-            foreach (var deceasedData in deceasedDataList)
-            {
-                var deceased = CreateDeceased(deceasedData);
-                deceasedList.Add(deceased);
-            }
-
-            return deceasedList;
-        }
+      _deceasedRepository = deceasedRepository;
+      _gravesService = gravesService;
     }
+
+    public IEnumerable<Deceased> GetDeceaseds()
+    {
+      return _deceasedRepository.GetDeceaseds();
+    }
+
+    public (IEnumerable<Deceased> Items, int TotalCount) SearchDeceaseds(
+    string name,
+    int? birthYearAfter,
+    int? deceaseYearBefore,
+    string orderBy,
+    int pageNumber,
+    int pageSize)
+    {
+      var query = _deceasedRepository.GetDeceaseds();
+
+      if (!string.IsNullOrEmpty(name))
+      {
+        query = query.Where(d => d.Name.ToUpper().Contains(name.ToUpper()));
+      }
+
+      if (birthYearAfter.HasValue && birthYearAfter > 0)
+      {
+        query = query.Where(d => d.DateOfBirth.Year >= birthYearAfter);
+      }
+
+      if (deceaseYearBefore.HasValue && deceaseYearBefore > 0)
+      {
+        query = query.Where(d => d.DateOfDeath.Year <= deceaseYearBefore);
+      }
+
+      if (!string.IsNullOrEmpty(orderBy))
+      {
+        switch (orderBy.ToLower())
+        {
+          case "name_asc":
+            query = query.OrderBy(d => d.Name);
+            break;
+          case "name_desc":
+            query = query.OrderByDescending(d => d.Name);
+            break;
+          case "dateofdeath_asc":
+            query = query.OrderBy(d => d.DateOfDeath);
+            break;
+          case "dateofdeath_desc":
+            query = query.OrderByDescending(d => d.DateOfDeath);
+            break;
+          case "dateofbirth_asc":
+            query = query.OrderBy(d => d.DateOfBirth);
+            break;
+          case "dateofbirth_desc":
+            query = query.OrderByDescending(d => d.DateOfBirth);
+            break;
+          default:
+            break;
+        }
+      }
+
+      var totalCount = query.Count();
+
+      // Apply paging
+      var skip = (pageNumber - 1) * pageSize;
+      var items = query.Skip(skip).Take(pageSize).ToList();
+
+      return (items, totalCount);
+    }
+
+
+    public Deceased GetDeceasedByID(long id)
+    {
+      return _deceasedRepository.GetDeceasedByID(id);
+    }
+
+    public async Task<Deceased> GetDeceasedWithMessagesByID(long id)
+    {
+      return await _deceasedRepository.GetDeceasedWithMessagesByID(id);
+    }
+
+    public void AddMessageToDeceased(long id, Message message)
+    {
+      var deceased = _deceasedRepository.GetDeceasedByID(id);
+      if (deceased != null)
+      {
+        if (deceased.MessageList == null)
+        {
+          deceased.MessageList = new List<Message>();
+        }
+
+        deceased.MessageList.Add(message);
+
+        _deceasedRepository.Save();
+      }
+    }
+
+    public bool InsertDeceased(Deceased deceased)
+    {
+      bool isSuccessful = _deceasedRepository.InsertDeceased(deceased);
+      _deceasedRepository.Save();
+      return isSuccessful;
+    }
+
+    public void UpdateDeceased(Deceased deceased)
+    {
+      _deceasedRepository.UpdateDeceased(deceased);
+      _deceasedRepository.Save();
+    }
+
+    public void DeleteDeceased(long id)
+    {
+      _deceasedRepository.DeleteDeceased(id);
+      _deceasedRepository.Save();
+    }
+
+    public bool DeceasedExists(long id)
+    {
+      return _deceasedRepository.DeceasedExists(id);
+    }
+
+    public Deceased CreateDeceased(DeceasedDataDTO deceasedData)
+    {
+      Grave deceasedsGrave = _gravesService.GetOrCreateGrave(deceasedData.GraveTable, deceasedData.GraveRow, deceasedData.GraveParcel);
+      var deceased = new Deceased
+      {
+        Name = deceasedData.Name,
+        DateOfDeath = deceasedData.DateOfDeath,
+        DateOfBirth = deceasedData.DateOfBirth,
+        Grave = deceasedsGrave,
+        GraveId = deceasedsGrave.Id
+      };
+      InsertDeceased(deceased);
+      return deceased;
+    }
+
+    public IEnumerable<Deceased> CreateDeceaseds(IEnumerable<DeceasedDataDTO> deceasedDataList)
+    {
+      var deceasedList = new List<Deceased>();
+
+      foreach (var deceasedData in deceasedDataList)
+      {
+        var deceased = CreateDeceased(deceasedData);
+        deceasedList.Add(deceased);
+      }
+
+      return deceasedList;
+    }
+  }
 }

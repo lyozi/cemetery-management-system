@@ -47,7 +47,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("GraveId");
 
-                    b.ToTable("DeceasedItems");
+                    b.ToTable("DeceasedItems", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.Grave", b =>
@@ -72,7 +72,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GraveItems");
+                    b.ToTable("GraveItems", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.GraveUIPolygon", b =>
@@ -91,7 +91,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("GraveId")
                         .IsUnique();
 
-                    b.ToTable("GraveUIPolygons");
+                    b.ToTable("GraveUIPolygons", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.Message", b =>
@@ -123,7 +123,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("DeceasedId");
 
-                    b.ToTable("MessageItems");
+                    b.ToTable("MessageItems", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Models.Point", b =>
@@ -147,7 +147,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("GraveUIPolygonId");
 
-                    b.ToTable("Points");
+                    b.ToTable("Points", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
