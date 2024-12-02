@@ -9,7 +9,6 @@ namespace WebAPI.Controllers
 {
 	[Route("api/Deceased")]
 	[ApiController]
-	[Authorize]
 	public class DeceasedsController : ControllerBase
 	{
 		private readonly IDeceasedService _deceasedService;
