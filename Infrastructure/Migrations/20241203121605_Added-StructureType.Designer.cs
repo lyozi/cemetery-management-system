@@ -3,6 +3,7 @@ using System;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20241203121605_Added-StructureType")]
+    partial class AddedStructureType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,7 +50,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("GraveId");
 
-                    b.ToTable("DeceasedItems", (string)null);
+                    b.ToTable("DeceasedItems");
                 });
 
             modelBuilder.Entity("Domain.Models.Grave", b =>
@@ -72,7 +75,7 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GraveItems", (string)null);
+                    b.ToTable("GraveItems");
                 });
 
             modelBuilder.Entity("Domain.Models.GraveUIPolygon", b =>
@@ -94,7 +97,7 @@ namespace Infrastructure.Migrations
                     b.HasIndex("GraveId")
                         .IsUnique();
 
-                    b.ToTable("GraveUIPolygons", (string)null);
+                    b.ToTable("GraveUIPolygons");
                 });
 
             modelBuilder.Entity("Domain.Models.Message", b =>
@@ -126,7 +129,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("DeceasedId");
 
-                    b.ToTable("MessageItems", (string)null);
+                    b.ToTable("MessageItems");
                 });
 
             modelBuilder.Entity("Domain.Models.Point", b =>
@@ -150,7 +153,7 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("GraveUIPolygonId");
 
-                    b.ToTable("Points", (string)null);
+                    b.ToTable("Points");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
