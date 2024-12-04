@@ -10,7 +10,8 @@ using System.Xml.Linq;
 
 namespace Domain.Models
 {
-    public class Grave
+  [Index(nameof(Row), nameof(Parcel), nameof(Type), IsUnique = true)]
+  public class Grave
     {
         [Key]
         public long Id { get; set; }
