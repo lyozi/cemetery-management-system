@@ -17,7 +17,7 @@ using System.Security.Claims;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
-		options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
 );
 
 // Swagger
@@ -27,33 +27,35 @@ builder.Services.AddSwaggerGen();
 // Cors
 builder.Services.AddCors(options =>
 {
-	options.AddPolicy("AllowOrigin",
-			builder => builder.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+  options.AddPolicy("AllowOrigin",
+      builder => builder.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
 });
 
 // Cookie
 builder.Services.ConfigureApplicationCookie(options =>
 {
-	options.Cookie.HttpOnly = false;
-	options.Cookie.SameSite = SameSiteMode.None;
-	options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+  options.Cookie.HttpOnly = false;
+  options.Cookie.SameSite = SameSiteMode.None;
+  options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
 // DbContext regisztrálása
 builder.Services.AddDbContext<DatabaseContext>(options =>
-		options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Infrastructure")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Infrastructure")));
 
 // Identity
 builder.Services.AddAuthorization();
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-		.AddEntityFrameworkStores<DatabaseContext>();
+    .AddEntityFrameworkStores<DatabaseContext>();
 
 // Policy
 builder.Services.AddAuthorization(options =>
 {
-	options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-	options.AddPolicy("Manager", policy => policy.RequireRole("Admin", "Manager"));
-	options.AddPolicy("Member", policy => policy.RequireRole("Member", "Admin", "Manager"));
+  options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+  options.AddPolicy("Manager", policy => policy.RequireRole("Admin", 
+    "Manager"));
+  options.AddPolicy("Member", policy => policy.RequireRole("Member", 
+    "Admin", "Manager"));
 });
 
 // Repository Pattern DI 
@@ -73,22 +75,22 @@ var app = builder.Build();
 // Role-ok létrehozása
 using (var scope = app.Services.CreateScope())
 {
-	var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-	var roles = new[] { "Admin", "Manager", "Member" };
+  var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+  var roles = new[] { "Admin", "Manager", "Member" };
 
-	foreach (var role in roles)
-	{
-		if (!await roleManager.RoleExistsAsync(role))
-		{
-			await roleManager.CreateAsync(new IdentityRole(role));
-		}
-	}
+  foreach (var role in roles)
+  {
+    if (!await roleManager.RoleExistsAsync(role))
+    {
+      await roleManager.CreateAsync(new IdentityRole(role));
+    }
+  }
 }
 
 if (app.Environment.IsDevelopment())
 {
-	app.UseSwagger();
-	app.UseSwaggerUI();
+  app.UseSwagger();
+  app.UseSwaggerUI();
 }
 
 app.UseDefaultFiles();

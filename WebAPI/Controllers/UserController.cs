@@ -20,12 +20,12 @@ namespace WebAPI.Controllers
 		[HttpPost("login")]
 		public async Task<IActionResult> Login([FromBody] LoginDTO model)
 		{
-			var (Succeeded, Message, Response) = await _userService.LoginAsync(model);
-			if (Succeeded)
+			var Response = await _userService.LoginAsync(model);
+			if (Response.Succeeded)
 			{
 				return Ok(Response);
 			}
-			return Unauthorized(Message);
+			return Unauthorized(Response.Message);
 		}
 
 		[HttpPost("register")]

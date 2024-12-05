@@ -13,14 +13,6 @@ namespace Infrastructure.Context
     {
     }
 
-    public void ConfigureServices(IServiceCollection services)
-    {
-      services.AddDbContext<DatabaseContext>(options =>
-          options.UseNpgsql("Host=localhost;Port=5432;Database=TemetoKataszter;Username=lyozi;Password=jozsika20030101;Include Error Detail=true",
-          b => b.MigrationsAssembly("Infrastructure")));
-
-    }
-
     public DbSet<Grave> GraveItems { get; set; }
     public DbSet<GraveUIPolygon> GraveUIPolygons { get; set; }
     public DbSet<Point> Points { get; set; }
