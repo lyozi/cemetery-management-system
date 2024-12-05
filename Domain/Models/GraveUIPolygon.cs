@@ -12,9 +12,10 @@ namespace Domain.Models
     public long Id { get; set; }
     public short StructureType { get; set; }
     public required List<Point> LatLngs { get; set; }
-    public long GraveId { get; set; } = 0;
-    public Grave? Grave { get; set; } = null;
+    public long GraveId { get; set; }
+    public Grave? Grave { get; set; }
   }
+
 
   public class Point
   {

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Domain.ServiceInterfaces;
 using Domain.Services;
 using Domain.DTOs;
+using Newtonsoft.Json;
 
 namespace WebAPI.Controllers
 {
@@ -98,24 +99,35 @@ namespace WebAPI.Controllers
     }
 
     [HttpPost]
-    public async Task<ActionResult<GraveUIPolygon>> PostGraveUIPolygonAndGrave(GravePositionDataDTO dto)
+    public async Task<ActionResult<GraveUIPolygon>> PostGraveUIPolygonAndGrave([FromForm] GravePositionDataDTO dto)
     {
+      List<Point> latLngs = JsonConvert.DeserializeObject<List<Point>>(dto.LatLngs);
+
       var grave = _gravesService.GetOrCreateGrave(dto.Table, dto.Row, dto.Parcel);
 
       var graveUIPolygon = new GraveUIPolygon
       {
         StructureType = dto.StructureType,
-        LatLngs = dto.LatLngs,
+        LatLngs = latLngs,
         GraveId = grave.Id
       };
+
+      if (dto.Image != null)
+      {
+        var imagePath = Path.Combine("wwwroot", "images", dto.Image.FileName);
+        using (var stream = new FileStream(imagePath, FileMode.Create))
+        {
+          await dto.Image.CopyToAsync(stream);
+        }
+        grave.ImageUrl = $"/{dto.Image.FileName}";
+      }
 
       _context.GraveUIPolygons.Add(graveUIPolygon);
       await _context.SaveChangesAsync();
 
-      Console.WriteLine($"StructureType: {graveUIPolygon.StructureType}");
-
       return CreatedAtAction(nameof(GetGraveUIPolygon), new { id = graveUIPolygon.Id }, graveUIPolygon);
     }
+
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteGraveUIPolygon(long id)

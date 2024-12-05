@@ -145,6 +145,7 @@ namespace Domain.Services
         Name = deceasedData.Name,
         DateOfDeath = deceasedData.DateOfDeath,
         DateOfBirth = deceasedData.DateOfBirth,
+        ImageUrl = deceasedsGrave.ImageUrl,
         Grave = deceasedsGrave,
         GraveId = deceasedsGrave.Id
       };
