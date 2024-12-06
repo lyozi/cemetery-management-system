@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace Domain.Models
 {
-  [Index(nameof(Row), nameof(Parcel), nameof(Type), IsUnique = true)]
+  [Index(nameof(Table), nameof(Row), nameof(Parcel), IsUnique = true)]
   public class Grave
   {
     [Key]
