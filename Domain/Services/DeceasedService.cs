@@ -78,8 +78,6 @@ namespace Domain.Services
       }
 
       var totalCount = query.Count();
-
-      // Apply paging
       var skip = (pageNumber - 1) * pageSize;
       var items = query.Skip(skip).Take(pageSize).ToList();
 
