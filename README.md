@@ -2,7 +2,7 @@
 
 **BSc Thesis Project** - Budapest University of Technology and Economics
 
-[![Read Thesis](https://img.shields.io/badge/Read_Thesis_(PDF)-000000?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](./docs/Thesis_Documentation.pdf)
+[![Read Thesis](https://img.shields.io/badge/Read_Thesis_(PDF)-000000?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](./Docs/Thesis_Documentation.pdf)
 
 ## 📖 Overview
 A full-stack web application designed to modernize cemetery record-keeping. It features a custom interactive map engine built on processed drone imagery, allowing users to virtually navigate the cemetery, locate specific graves, and visit digital memorial pages.
