@@ -1,106 +1,181 @@
-using Microsoft.EntityFrameworkCore;
-using Infrastructure.Context;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using System.Configuration;
-using Npgsql.EntityFrameworkCore.PostgreSQL;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Infrastructure.GraveRepo;
-using Infrastructure.DeceasedRepo;
-using Infrastructure.MessageRepo;
 using Domain.RepositoryInterfaces;
 using Domain.Services;
 using Domain.ServiceInterfaces;
-using System.Security.Claims;
+using Infrastructure.Context;
+using Infrastructure.DeceasedRepo;
+using Infrastructure.GraveRepo;
+using Infrastructure.MessageRepo;
+using Infrastructure.Storage;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
+
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// --- Forwarded headers (Azure App Service Linux terminates TLS at the front door) ---
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// --- MVC + JSON ---
 builder.Services.AddControllers().AddNewtonsoftJson(options =>
-    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
-);
+    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
-// Swagger
+// --- Swagger (enabled in all environments â€” thesis project, discoverability is a feature) ---
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Memoriam API",
+        Version = "v1",
+        Description = "Backend for the Cemetery Management System thesis project. " +
+                      "Frontend: https://memoriam.social"
+    });
+});
 
-// Cors
+// --- CORS: exact origin + host-suffix matching ---
+var exactOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                   ?? Array.Empty<string>();
+var originSuffixes = builder.Configuration.GetSection("Cors:AllowedOriginSuffixes").Get<string[]>()
+                     ?? Array.Empty<string>();
+
 builder.Services.AddCors(options =>
 {
-  options.AddPolicy("AllowOrigin",
-      builder => builder.WithOrigins("http://localhost:3000").AllowAnyMethod().AllowAnyHeader().AllowCredentials());
+    options.AddPolicy("Default", policy => policy
+        .SetIsOriginAllowed(origin =>
+        {
+            foreach (var o in exactOrigins)
+            {
+                if (string.Equals(o, origin, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri)) return false;
+            foreach (var suf in originSuffixes)
+            {
+                if (uri.Host.EndsWith(suf, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
+        })
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials()
+        .WithExposedHeaders("Total-Count", "Page-Number", "Page-Size", "Total-Pages"));
 });
 
-// Cookie
+// --- Identity cookie ---
 builder.Services.ConfigureApplicationCookie(options =>
 {
-  options.Cookie.HttpOnly = false;
-  options.Cookie.SameSite = SameSiteMode.None;
-  options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.None;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = 401; return Task.CompletedTask; };
+    options.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = 403; return Task.CompletedTask; };
 });
 
-// DbContext regisztrálása
+// --- DbContext ---
 builder.Services.AddDbContext<DatabaseContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Infrastructure")));
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npg => npg.MigrationsAssembly("Infrastructure")));
 
-// Identity
-builder.Services.AddAuthorization();
+// --- Identity ---
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<DatabaseContext>();
 
-// Policy
 builder.Services.AddAuthorization(options =>
 {
-  options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-  options.AddPolicy("Manager", policy => policy.RequireRole("Admin", 
-    "Manager"));
-  options.AddPolicy("Member", policy => policy.RequireRole("Member", 
-    "Admin", "Manager"));
+    options.AddPolicy("Admin", p => p.RequireRole("Admin"));
+    options.AddPolicy("Manager", p => p.RequireRole("Admin", "Manager"));
+    options.AddPolicy("Member", p => p.RequireRole("Member", "Admin", "Manager"));
 });
 
-// Repository Pattern DI 
+// --- Health checks ---
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<DatabaseContext>("db", tags: new[] { "ready" });
+
+// --- Image storage (Cloudflare R2) ---
+builder.Services.Configure<R2Options>(builder.Configuration.GetSection("R2"));
+builder.Services.AddSingleton<IImageStorage, R2ImageStorage>();
+
+// --- Repository Pattern DI ---
 builder.Services.AddScoped<IGraveRepository, GraveRepository>();
 builder.Services.AddScoped<IDeceasedRepository, DeceasedRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 
-// Service DI
+// --- Service DI ---
 builder.Services.AddScoped<IDeceasedService, DeceasedService>();
 builder.Services.AddScoped<IGravesService, GravesService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
-// Ez elott lehet csak használni a builder.Services-t
 var app = builder.Build();
 
-// Role-ok létrehozása
-using (var scope = app.Services.CreateScope())
+// --- Startup migration + role seed (Production and Development only) ---
+if (app.Environment.IsProduction() || app.Environment.IsDevelopment())
 {
-  var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-  var roles = new[] { "Admin", "Manager", "Member" };
-
-  foreach (var role in roles)
-  {
-    if (!await roleManager.RoleExistsAsync(role))
+    using var scope = app.Services.CreateScope();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
     {
-      await roleManager.CreateAsync(new IdentityRole(role));
+        var db = scope.ServiceProvider.GetRequiredService<DatabaseContext>();
+        logger.LogInformation("Applying EF Core migrations...");
+        await db.Database.MigrateAsync();
+
+        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        foreach (var role in new[] { "Admin", "Manager", "Member" })
+        {
+            if (!await roleManager.RoleExistsAsync(role))
+            {
+                await roleManager.CreateAsync(new IdentityRole(role));
+            }
+        }
+        logger.LogInformation("Startup migration + role seed complete.");
     }
-  }
+    catch (Exception ex)
+    {
+        logger.LogCritical(ex, "Startup migration/seed failed. Aborting.");
+        throw;
+    }
 }
 
-if (app.Environment.IsDevelopment())
+// --- Middleware pipeline ---
+app.UseForwardedHeaders();
+
+if (!app.Environment.IsDevelopment())
 {
-  app.UseSwagger();
-  app.UseSwaggerUI();
+    app.UseExceptionHandler(errApp => errApp.Run(async ctx =>
+    {
+        ctx.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        ctx.Response.ContentType = "application/problem+json";
+        await ctx.Response.WriteAsJsonAsync(new ProblemDetails
+        {
+            Status = 500,
+            Title = "An unexpected error occurred."
+        });
+    }));
 }
 
-app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseSwagger();
+app.UseSwaggerUI();
 
-app.UseCors("AllowOrigin");
+app.UseCors("Default");
 
-app.UseHttpsRedirection();
-
+app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = r => r.Tags.Contains("ready")
+});
 
 app.MapControllers();
 

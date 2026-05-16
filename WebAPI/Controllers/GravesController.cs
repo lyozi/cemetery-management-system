@@ -82,7 +82,7 @@ namespace WebAPI.Controllers
 
         // DELETE: api/Graves/5
         [HttpDelete("{id}")]
-        public IActionResult DeleteGrave(long id)
+        public async Task<IActionResult> DeleteGrave(long id)
         {
             var grave = _gravesService.GetGraveByID(id);
             if (grave == null)
@@ -90,21 +90,16 @@ namespace WebAPI.Controllers
                 return NotFound();
             }
 
-            _gravesService.DeleteGrave(id);
+            await _gravesService.DeleteGraveAsync(id);
 
             return NoContent();
         }
 
         // DELETE: api/Graves
         [HttpDelete]
-        public IActionResult DeleteGraves()
+        public async Task<IActionResult> DeleteGraves()
         {
-            var allGraveItems = _gravesService.GetGraves();
-            foreach (var grave in allGraveItems)
-            {
-                _gravesService.DeleteGrave(grave.Id);
-            }
-
+            await _gravesService.DeleteAllGravesAsync();
             return NoContent();
         }
 

@@ -59,6 +59,27 @@ Secure login and dashboard for cemetery caretakers to manage grave polygons and 
   <img width="400" alt="Login Page" src="https://github.com/user-attachments/assets/de3b56c2-86dc-49bc-a7c2-703148bc3e05" />
 </p>
 
+## 🛠 Local development setup
+
+After cloning, edit `WebAPI/appsettings.Development.json` with your local PostgreSQL
+connection string, then mark the file as skip-worktree so your local credentials aren't
+accidentally committed:
+
+```bash
+git update-index --skip-worktree WebAPI/appsettings.Development.json
+```
+
+To later pull upstream changes to that file, temporarily clear the flag:
+
+```bash
+git update-index --no-skip-worktree WebAPI/appsettings.Development.json
+git pull
+git update-index --skip-worktree WebAPI/appsettings.Development.json
+```
+
+Production configuration lives in Azure App Service → Configuration → Application
+settings; the committed `appsettings.json` contains placeholders only.
+
 ## 👤 Author
 **József Urak**
 <br>

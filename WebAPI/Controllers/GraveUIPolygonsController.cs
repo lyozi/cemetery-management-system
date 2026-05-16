@@ -112,14 +112,11 @@ namespace WebAPI.Controllers
         GraveId = grave.Id
       };
 
-      if (dto.Image != null)
+      if (dto.Image != null && dto.Image.Length > 0)
       {
-        var imagePath = Path.Combine("wwwroot", "images", dto.Image.FileName);
-        using (var stream = new FileStream(imagePath, FileMode.Create))
-        {
-          await dto.Image.CopyToAsync(stream);
-        }
-        grave.ImageUrl = $"/{dto.Image.FileName}";
+        await using var stream = dto.Image.OpenReadStream();
+        grave.ImageUrl = await _gravesService.SetGraveImageAsync(
+            grave.Id, stream, dto.Image.FileName, dto.Image.ContentType);
       }
 
       _context.GraveUIPolygons.Add(graveUIPolygon);

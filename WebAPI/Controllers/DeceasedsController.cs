@@ -42,8 +42,6 @@ namespace WebAPI.Controllers
 			Response.Headers.Append("Page-Size", pageSize.ToString());
 			Response.Headers.Append("Total-Pages", ((int)Math.Ceiling((double)totalCount / pageSize)).ToString());
 
-			Response.Headers.Append("Access-Control-Expose-Headers", "Total-Count, Page-Number, Page-Size, Total-Pages");
-
 			return Ok(deceasedItems);
 		}
 
@@ -128,7 +126,7 @@ namespace WebAPI.Controllers
 
 		[Authorize(Policy = "Manager")]
 		[HttpDelete("{id}")]
-		public IActionResult DeleteDeceased(long id)
+		public async Task<IActionResult> DeleteDeceased(long id)
 		{
 			var deceased = _deceasedService.GetDeceasedByID(id);
 
@@ -137,7 +135,7 @@ namespace WebAPI.Controllers
 				return NotFound();
 			}
 
-			_deceasedService.DeleteDeceased(id);
+			await _deceasedService.DeleteDeceasedAsync(id);
 			return NoContent();
 		}
 	}

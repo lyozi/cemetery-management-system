@@ -1,4 +1,7 @@
-﻿using Domain.Models;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Domain.Models;
 
 namespace Domain.ServiceInterfaces
 {
@@ -8,9 +11,17 @@ namespace Domain.ServiceInterfaces
         Grave GetGraveByID(long id);
         void InsertGrave(Grave grave);
         void UpdateGrave(Grave grave);
-        void DeleteGrave(long id);
+        Task DeleteGraveAsync(long id, CancellationToken ct = default);
+        Task DeleteAllGravesAsync(CancellationToken ct = default);
         bool GraveExists(long id);
         Grave GetOrCreateGrave(char table, short row, short parcel);
         Grave GetGraveFromPolygonId(long id);
+
+        Task<string> SetGraveImageAsync(
+            long graveId,
+            Stream content,
+            string fileName,
+            string contentType,
+            CancellationToken ct = default);
     }
 }

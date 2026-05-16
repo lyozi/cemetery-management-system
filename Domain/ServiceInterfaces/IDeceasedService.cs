@@ -1,10 +1,8 @@
-﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Domain.DTOs;
 using Domain.Models;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Domain.ServiceInterfaces
 {
@@ -22,10 +20,9 @@ namespace Domain.ServiceInterfaces
         void AddMessageToDeceased(long id, Message message);
         bool InsertDeceased(Deceased deceased);
         void UpdateDeceased(Deceased deceased);
-        void DeleteDeceased(long id);
+        Task DeleteDeceasedAsync(long id, CancellationToken ct = default);
         bool DeceasedExists(long id);
         Deceased CreateDeceased(DeceasedDataDTO deceasedData);
         IEnumerable<Deceased> CreateDeceaseds(IEnumerable<DeceasedDataDTO> deceasedDataList);
-
     }
 }

@@ -23,9 +23,23 @@ namespace Infrastructure.GraveRepo
             return context.GraveItems.ToList();
         }
 
+        public IEnumerable<Grave> GetGravesWithDeceasedList()
+        {
+            return context.GraveItems
+                          .Include(g => g.DeceasedList)
+                          .ToList();
+        }
+
         public Grave GetGraveByID(long id)
         {
             return context.GraveItems.Find(id);
+        }
+
+        public Grave? GetGraveWithDeceasedListByID(long id)
+        {
+            return context.GraveItems
+                          .Include(g => g.DeceasedList)
+                          .SingleOrDefault(g => g.Id == id);
         }
 
         public void InsertGrave(Grave deceased)

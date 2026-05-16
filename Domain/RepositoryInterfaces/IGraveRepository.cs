@@ -1,11 +1,13 @@
-﻿using Domain.Models;
+using Domain.Models;
 
 namespace Domain.RepositoryInterfaces
 {
     public interface IGraveRepository : IDisposable
     {
         IEnumerable<Grave> GetGraves();
+        IEnumerable<Grave> GetGravesWithDeceasedList();
         Grave GetGraveByID(long id);
+        Grave? GetGraveWithDeceasedListByID(long id);
         void InsertGrave(Grave grave);
         void DeleteGrave(long graveID);
         void UpdateGrave(Grave grave);

@@ -1,0 +1,76 @@
+# Deploys the Memoriam API to Azure App Service for Linux via OIDC.
+#
+# Required GitHub secrets:
+#   AZURE_CLIENT_ID       - Application (client) ID of the github-memoriam-api App Registration
+#   AZURE_TENANT_ID       - Directory (tenant) ID
+#   AZURE_SUBSCRIPTION_ID - Azure for Students subscription ID
+#
+# OIDC federation is configured on the App Registration; no client secret needed.
+
+name: Deploy API
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'Domain/**'
+      - 'Infrastructure/**'
+      - 'WebAPI/**'
+      - '*.sln'
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write       # required for OIDC
+  contents: read
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: true
+
+env:
+  AZURE_WEBAPP_NAME: memoriam-api
+  DOTNET_VERSION:    '8.0.x'
+  PUBLISH_DIR:       ${{ github.workspace }}/publish
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key:  ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore TemetoKataszter.sln
+
+      - name: Build
+        run: dotnet build TemetoKataszter.sln --configuration Release --no-restore
+
+      - name: Publish WebAPI
+        run: dotnet publish WebAPI/WebAPI.csproj --configuration Release --no-build --output ${{ env.PUBLISH_DIR }}
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id:       ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id:       ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          package:  ${{ env.PUBLISH_DIR }}
