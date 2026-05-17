@@ -116,6 +116,41 @@ namespace WebAPI.Controllers
             return Ok(grave);
         }
 
+        // POST: api/Graves/{id}/image
+        [HttpPost("{id}/image")]
+        [Authorize(Policy = "Manager")]
+        [RequestSizeLimit(10_000_000)]
+        public async Task<IActionResult> UploadImage(long id, IFormFile image, CancellationToken ct)
+        {
+            if (image == null || image.Length == 0)
+            {
+                return BadRequest("image is required.");
+            }
+
+            if (!_gravesService.GraveExists(id))
+            {
+                return NotFound();
+            }
+
+            await using var stream = image.OpenReadStream();
+            var url = await _gravesService.SetGraveImageAsync(id, stream, image.FileName, image.ContentType, ct);
+            return Ok(new { imageUrl = url });
+        }
+
+        // DELETE: api/Graves/{id}/image
+        [HttpDelete("{id}/image")]
+        [Authorize(Policy = "Manager")]
+        public async Task<IActionResult> DeleteImage(long id, CancellationToken ct)
+        {
+            if (!_gravesService.GraveExists(id))
+            {
+                return NotFound();
+            }
+
+            await _gravesService.DeleteGraveImageAsync(id, ct);
+            return NoContent();
+        }
+
         // PATCH: api/Graves/bulk-row
         [HttpPatch("bulk-row")]
         [Authorize(Policy = "Manager")]

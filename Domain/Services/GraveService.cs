@@ -155,11 +155,45 @@ namespace Domain.Services
             var grave = _graveRepository.GetGraveByID(graveId)
                         ?? throw new InvalidOperationException($"Grave {graveId} not found.");
 
+            if (!string.IsNullOrEmpty(grave.ImageUrl))
+            {
+                try
+                {
+                    await _imageStorage.DeleteAsync(grave.ImageUrl, ct);
+                }
+                catch (Exception ex)
+                {
+                    _log.LogWarning(ex, "Previous image cleanup failed for grave {GraveId} url {Url}", graveId, grave.ImageUrl);
+                }
+            }
+
             var url = await _imageStorage.UploadAsync(content, fileName, contentType, $"graves/{graveId}", ct);
             grave.ImageUrl = url;
             _graveRepository.UpdateGrave(grave);
             _graveRepository.Save();
             return url;
+        }
+
+        public async Task DeleteGraveImageAsync(long graveId, CancellationToken ct = default)
+        {
+            var grave = _graveRepository.GetGraveByID(graveId)
+                        ?? throw new InvalidOperationException($"Grave {graveId} not found.");
+
+            if (string.IsNullOrEmpty(grave.ImageUrl)) return;
+
+            var url = grave.ImageUrl;
+            grave.ImageUrl = null;
+            _graveRepository.UpdateGrave(grave);
+            _graveRepository.Save();
+
+            try
+            {
+                await _imageStorage.DeleteAsync(url, ct);
+            }
+            catch (Exception ex)
+            {
+                _log.LogWarning(ex, "Image cleanup failed for grave {GraveId} url {Url}", graveId, url);
+            }
         }
     }
 }

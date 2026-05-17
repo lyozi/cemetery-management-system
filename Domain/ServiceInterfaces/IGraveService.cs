@@ -24,5 +24,7 @@ namespace Domain.ServiceInterfaces
             string fileName,
             string contentType,
             CancellationToken ct = default);
+
+        Task DeleteGraveImageAsync(long graveId, CancellationToken ct = default);
     }
 }
