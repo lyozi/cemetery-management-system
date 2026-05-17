@@ -16,6 +16,7 @@ namespace Domain.ServiceInterfaces
         bool GraveExists(long id);
         Grave GetOrCreateGrave(char table, short row, short parcel);
         Grave GetGraveFromPolygonId(long id);
+        int BulkAssignRow(IEnumerable<long> polygonIds, short row);
 
         Task<string> SetGraveImageAsync(
             long graveId,

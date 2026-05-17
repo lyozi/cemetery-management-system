@@ -130,6 +130,21 @@ namespace Domain.Services
             return _graveRepository.GetGraveFromPolygonId(id);
         }
 
+        public int BulkAssignRow(IEnumerable<long> polygonIds, short row)
+        {
+            var updated = 0;
+            foreach (var polygonId in polygonIds.Distinct())
+            {
+                var grave = _graveRepository.GetGraveFromPolygonId(polygonId);
+                if (grave == null) continue;
+                grave.Row = row;
+                _graveRepository.UpdateGrave(grave);
+                updated++;
+            }
+            if (updated > 0) _graveRepository.Save();
+            return updated;
+        }
+
         public async Task<string> SetGraveImageAsync(
             long graveId,
             Stream content,

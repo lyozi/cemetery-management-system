@@ -101,7 +101,7 @@ namespace Infrastructure.GraveRepo
 
         public Grave GetGraveByTableRowParcel(char table, short row, short parcel)
         {
-            return context.GraveItems.SingleOrDefault(g => g.Table == table && g.Row == row && g.Parcel == parcel);
+            return context.GraveItems.FirstOrDefault(g => g.Table == table && g.Row == row && g.Parcel == parcel);
         }
 
         public Grave GetGraveFromPolygonId(long id)

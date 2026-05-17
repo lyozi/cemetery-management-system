@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Domain.Models;
 using Domain.Services;
 using Domain.ServiceInterfaces;
+using Domain.DTOs;
 
 namespace WebAPI.Controllers
 {
@@ -112,6 +114,20 @@ namespace WebAPI.Controllers
                 return NotFound();
             }
             return Ok(grave);
+        }
+
+        // PATCH: api/Graves/bulk-row
+        [HttpPatch("bulk-row")]
+        [Authorize(Policy = "Manager")]
+        public IActionResult BulkAssignRow([FromBody] BulkRowAssignDTO dto)
+        {
+            if (dto == null || dto.PolygonIds == null || dto.PolygonIds.Count == 0)
+            {
+                return BadRequest("polygonIds must contain at least one entry.");
+            }
+
+            var updated = _gravesService.BulkAssignRow(dto.PolygonIds, dto.Row);
+            return Ok(new { updated });
         }
     }
 }
