@@ -18,6 +18,8 @@ namespace Infrastructure.Context
     public DbSet<Point> Points { get; set; }
     public DbSet<Deceased> DeceasedItems { get; set; }
     public DbSet<Message> MessageItems { get; set; }
+    public DbSet<Parcel> Parcels { get; set; }
+    public DbSet<ParcelPoint> ParcelPoints { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +41,16 @@ namespace Infrastructure.Context
         .HasMany(d => d.MessageList)
         .WithOne()
         .HasForeignKey(m => m.DeceasedId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      modelBuilder.Entity<Parcel>()
+        .Property(p => p.Id)
+        .ValueGeneratedNever();
+
+      modelBuilder.Entity<Parcel>()
+        .HasMany(p => p.LatLngs)
+        .WithOne(pt => pt.Parcel)
+        .HasForeignKey(pt => pt.ParcelId)
         .OnDelete(DeleteBehavior.Cascade);
     }
   }

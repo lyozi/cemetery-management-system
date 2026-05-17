@@ -5,6 +5,7 @@ using Infrastructure.Context;
 using Infrastructure.DeceasedRepo;
 using Infrastructure.GraveRepo;
 using Infrastructure.MessageRepo;
+using Infrastructure.ParcelRepo;
 using Infrastructure.Storage;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -101,20 +102,35 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<DatabaseContext>("db", tags: new[] { "ready" });
 
-// --- Image storage (Cloudflare R2) ---
-builder.Services.Configure<R2Options>(builder.Configuration.GetSection("R2"));
-builder.Services.AddSingleton<IImageStorage, R2ImageStorage>();
+// --- Image storage: R2 in production, local filesystem in development ---
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.Configure<LocalImageStorageOptions>(builder.Configuration.GetSection("LocalStorage"));
+    builder.Services.PostConfigure<LocalImageStorageOptions>(o =>
+    {
+        if (!Path.IsPathRooted(o.RootPath))
+            o.RootPath = Path.Combine(builder.Environment.ContentRootPath, o.RootPath);
+    });
+    builder.Services.AddSingleton<IImageStorage, LocalImageStorage>();
+}
+else
+{
+    builder.Services.Configure<R2Options>(builder.Configuration.GetSection("R2"));
+    builder.Services.AddSingleton<IImageStorage, R2ImageStorage>();
+}
 
 // --- Repository Pattern DI ---
 builder.Services.AddScoped<IGraveRepository, GraveRepository>();
 builder.Services.AddScoped<IDeceasedRepository, DeceasedRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
+builder.Services.AddScoped<IParcelRepository, ParcelRepository>();
 
 // --- Service DI ---
 builder.Services.AddScoped<IDeceasedService, DeceasedService>();
 builder.Services.AddScoped<IGravesService, GravesService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IParcelsService, ParcelsService>();
 
 var app = builder.Build();
 
@@ -165,6 +181,13 @@ if (!app.Environment.IsDevelopment())
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+if (app.Environment.IsDevelopment())
+{
+    var uploadsRoot = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads");
+    Directory.CreateDirectory(uploadsRoot);
+    app.UseStaticFiles();
+}
 
 app.UseCors("Default");
 

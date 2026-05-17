@@ -98,6 +98,29 @@ namespace WebAPI.Controllers
       return NoContent();
     }
 
+    public class StructureTypeUpdateDto
+    {
+      public short StructureType { get; set; }
+    }
+
+    // PATCH/PUT api/GraveUIPolygons/{id}/structure-type
+    // Updates only the StructureType field. Separate from PUT above because that
+    // requires the full polygon with exactly 4 LatLngs, which doesn't fit our
+    // bulk-imported polygons that may have more vertices.
+    [HttpPut("{id}/structure-type")]
+    public async Task<IActionResult> UpdateStructureType(long id, [FromBody] StructureTypeUpdateDto dto)
+    {
+      var polygon = await _context.GraveUIPolygons.FindAsync(id);
+      if (polygon == null)
+      {
+        return NotFound();
+      }
+
+      polygon.StructureType = dto.StructureType;
+      await _context.SaveChangesAsync();
+      return NoContent();
+    }
+
     [HttpPost]
     public async Task<ActionResult<GraveUIPolygon>> PostGraveUIPolygonAndGrave([FromForm] GravePositionDataDTO dto)
     {
