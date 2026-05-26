@@ -126,7 +126,7 @@ namespace WebAPI.Controllers
     {
       List<Point> latLngs = JsonConvert.DeserializeObject<List<Point>>(dto.LatLngs);
 
-      var grave = _gravesService.GetOrCreateGrave(dto.Table, dto.Row, dto.Parcel);
+      var grave = _gravesService.GetOrCreateGrave(dto.Table, dto.Row);
 
       var graveUIPolygon = new GraveUIPolygon
       {

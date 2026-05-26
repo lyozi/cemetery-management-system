@@ -10,40 +10,40 @@ using NetTopologySuite.Geometries;
 
 namespace Domain.Services
 {
-  public class ParcelsService : IParcelsService
+  public class TablesService : ITablesService
   {
-    private const short UnassignedParcel = 0;
+    private const short UnassignedTable = 0;
     private static readonly GeometryFactory GeoFactory = new();
 
-    private readonly IParcelRepository _parcelRepository;
+    private readonly ITableRepository _tableRepository;
 
-    public ParcelsService(IParcelRepository parcelRepository)
+    public TablesService(ITableRepository tableRepository)
     {
-      _parcelRepository = parcelRepository;
+      _tableRepository = tableRepository;
     }
 
-    public Task<List<Parcel>> GetAllAsync() => _parcelRepository.GetAllAsync();
+    public Task<List<Table>> GetAllAsync() => _tableRepository.GetAllAsync();
 
-    public Task<Parcel?> GetByIdAsync(short id) => _parcelRepository.GetByIdAsync(id);
+    public Task<Table?> GetByIdAsync(short id) => _tableRepository.GetByIdAsync(id);
 
-    public async Task<ParcelAssignmentResultDTO> UpsertAndAssignAsync(
+    public async Task<TableAssignmentResultDTO> UpsertAndAssignAsync(
       short id,
       string? name,
-      List<ParcelPointDTO> latLngs)
+      List<TablePointDTO> latLngs)
     {
       if (latLngs == null || latLngs.Count < 3)
       {
-        throw new ArgumentException("A parcel polygon must have at least 3 points.", nameof(latLngs));
+        throw new ArgumentException("A table polygon must have at least 3 points.", nameof(latLngs));
       }
 
       var entityPoints = latLngs
-        .Select(p => new ParcelPoint { Lat = p.Lat, Lng = p.Lng })
+        .Select(p => new TablePoint { Lat = p.Lat, Lng = p.Lng })
         .ToList();
 
-      var parcel = await _parcelRepository.UpsertAsync(id, name, entityPoints);
-      var parcelPolygon = BuildPolygon(latLngs.Select(p => (p.Lat, p.Lng)));
+      var table = await _tableRepository.UpsertAsync(id, name, entityPoints);
+      var tablePolygon = BuildPolygon(latLngs.Select(p => (p.Lat, p.Lng)));
 
-      var graves = await _parcelRepository.GetGravesWithPolygonsAsync();
+      var graves = await _tableRepository.GetGravesWithPolygonsAsync();
       int assigned = 0;
       int unassigned = 0;
 
@@ -57,31 +57,31 @@ namespace Domain.Services
         var graveGeom = TryBuildPolygon(grave.GraveUIPolygon.LatLngs.Select(p => (p.Lat, p.Lng)));
         if (graveGeom == null) continue;
 
-        var isInside = parcelPolygon.Contains(graveGeom.Centroid);
-        var wasAssigned = grave.Parcel == id;
+        var isInside = tablePolygon.Contains(graveGeom.Centroid);
+        var wasAssigned = grave.Table == id;
 
         if (isInside && !wasAssigned)
         {
-          grave.Parcel = id;
-          _parcelRepository.MarkGraveModified(grave);
+          grave.Table = id;
+          _tableRepository.MarkGraveModified(grave);
           assigned++;
         }
         else if (!isInside && wasAssigned)
         {
-          grave.Parcel = UnassignedParcel;
-          _parcelRepository.MarkGraveModified(grave);
+          grave.Table = UnassignedTable;
+          _tableRepository.MarkGraveModified(grave);
           unassigned++;
         }
       }
 
       if (assigned > 0 || unassigned > 0)
       {
-        await _parcelRepository.SaveAsync();
+        await _tableRepository.SaveAsync();
       }
 
-      return new ParcelAssignmentResultDTO
+      return new TableAssignmentResultDTO
       {
-        Parcel = parcel,
+        Table = table,
         AssignedCount = assigned,
         UnassignedCount = unassigned,
       };
@@ -89,7 +89,7 @@ namespace Domain.Services
 
     public Task<bool> DeleteAsync(short id)
     {
-      return _parcelRepository.DeleteAsync(id);
+      return _tableRepository.DeleteAsync(id);
     }
 
     private static Polygon BuildPolygon(IEnumerable<(double Lat, double Lng)> points)

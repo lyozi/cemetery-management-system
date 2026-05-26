@@ -14,7 +14,7 @@ namespace Domain.ServiceInterfaces
         Task DeleteGraveAsync(long id, CancellationToken ct = default);
         Task DeleteAllGravesAsync(CancellationToken ct = default);
         bool GraveExists(long id);
-        Grave GetOrCreateGrave(char table, short row, short parcel);
+        Grave GetOrCreateGrave(short table, short row);
         Grave GetGraveFromPolygonId(long id);
         int BulkAssignRow(IEnumerable<long> polygonIds, short row);
 

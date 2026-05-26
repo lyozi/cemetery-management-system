@@ -163,7 +163,7 @@ namespace Domain.Services
 
         public Deceased CreateDeceased(DeceasedDataDTO deceasedData)
         {
-            Grave deceasedsGrave = _gravesService.GetOrCreateGrave(deceasedData.GraveTable, deceasedData.GraveRow, deceasedData.GraveParcel);
+            Grave deceasedsGrave = _gravesService.GetOrCreateGrave(deceasedData.GraveTable, deceasedData.GraveRow);
             var deceased = new Deceased
             {
                 Name = deceasedData.Name,

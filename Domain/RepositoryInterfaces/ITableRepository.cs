@@ -4,11 +4,11 @@ using Domain.Models;
 
 namespace Domain.RepositoryInterfaces
 {
-  public interface IParcelRepository
+  public interface ITableRepository
   {
-    Task<List<Parcel>> GetAllAsync();
-    Task<Parcel?> GetByIdAsync(short id);
-    Task<Parcel> UpsertAsync(short id, string? name, List<ParcelPoint> latLngs);
+    Task<List<Table>> GetAllAsync();
+    Task<Table?> GetByIdAsync(short id);
+    Task<Table> UpsertAsync(short id, string? name, List<TablePoint> latLngs);
     Task<bool> DeleteAsync(short id);
     Task<List<Grave>> GetGravesWithPolygonsAsync();
     void MarkGraveModified(Grave grave);

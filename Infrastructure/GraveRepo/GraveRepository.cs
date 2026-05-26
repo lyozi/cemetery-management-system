@@ -99,9 +99,9 @@ namespace Infrastructure.GraveRepo
             GC.SuppressFinalize(this);
         }
 
-        public Grave GetGraveByTableRowParcel(char table, short row, short parcel)
+        public Grave GetGraveByTableRow(short table, short row)
         {
-            return context.GraveItems.FirstOrDefault(g => g.Table == table && g.Row == row && g.Parcel == parcel);
+            return context.GraveItems.FirstOrDefault(g => g.Table == table && g.Row == row);
         }
 
         public Grave GetGraveFromPolygonId(long id)

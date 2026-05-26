@@ -2,14 +2,14 @@ using System.Collections.Generic;
 
 namespace Domain.DTOs
 {
-  public class ParcelUpsertDTO
+  public class TableUpsertDTO
   {
     public short Id { get; set; }
     public string? Name { get; set; }
-    public List<ParcelPointDTO> LatLngs { get; set; } = new();
+    public List<TablePointDTO> LatLngs { get; set; } = new();
   }
 
-  public class ParcelPointDTO
+  public class TablePointDTO
   {
     public double Lat { get; set; }
     public double Lng { get; set; }

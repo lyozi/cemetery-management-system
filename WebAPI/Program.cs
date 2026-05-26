@@ -5,7 +5,7 @@ using Infrastructure.Context;
 using Infrastructure.DeceasedRepo;
 using Infrastructure.GraveRepo;
 using Infrastructure.MessageRepo;
-using Infrastructure.ParcelRepo;
+using Infrastructure.TableRepo;
 using Infrastructure.Storage;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -123,14 +123,14 @@ else
 builder.Services.AddScoped<IGraveRepository, GraveRepository>();
 builder.Services.AddScoped<IDeceasedRepository, DeceasedRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
-builder.Services.AddScoped<IParcelRepository, ParcelRepository>();
+builder.Services.AddScoped<ITableRepository, TableRepository>();
 
 // --- Service DI ---
 builder.Services.AddScoped<IDeceasedService, DeceasedService>();
 builder.Services.AddScoped<IGravesService, GravesService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IParcelsService, ParcelsService>();
+builder.Services.AddScoped<ITablesService, TablesService>();
 
 var app = builder.Build();
 

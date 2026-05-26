@@ -2,9 +2,9 @@ using Domain.Models;
 
 namespace Domain.DTOs
 {
-  public class ParcelAssignmentResultDTO
+  public class TableAssignmentResultDTO
   {
-    public required Parcel Parcel { get; set; }
+    public required Table Table { get; set; }
     public int AssignedCount { get; set; }
     public int UnassignedCount { get; set; }
   }

@@ -6,95 +6,95 @@ using Domain.RepositoryInterfaces;
 using Infrastructure.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infrastructure.ParcelRepo
+namespace Infrastructure.TableRepo
 {
-  public class ParcelRepository : IParcelRepository
+  public class TableRepository : ITableRepository
   {
     private readonly DatabaseContext _context;
 
-    public ParcelRepository(DatabaseContext context)
+    public TableRepository(DatabaseContext context)
     {
       _context = context;
     }
 
-    public async Task<List<Parcel>> GetAllAsync()
+    public async Task<List<Table>> GetAllAsync()
     {
-      var parcels = await _context.Parcels
-        .Include(p => p.LatLngs)
+      var tables = await _context.Tables
+        .Include(t => t.LatLngs)
         .AsNoTracking()
         .ToListAsync();
 
-      foreach (var p in parcels)
+      foreach (var t in tables)
       {
-        p.LatLngs = p.LatLngs.OrderBy(pt => pt.Id).ToList();
+        t.LatLngs = t.LatLngs.OrderBy(pt => pt.Id).ToList();
       }
-      return parcels;
+      return tables;
     }
 
-    public async Task<Parcel?> GetByIdAsync(short id)
+    public async Task<Table?> GetByIdAsync(short id)
     {
-      var parcel = await _context.Parcels
-        .Include(p => p.LatLngs)
-        .FirstOrDefaultAsync(p => p.Id == id);
+      var table = await _context.Tables
+        .Include(t => t.LatLngs)
+        .FirstOrDefaultAsync(t => t.Id == id);
 
-      if (parcel != null)
+      if (table != null)
       {
-        parcel.LatLngs = parcel.LatLngs.OrderBy(pt => pt.Id).ToList();
+        table.LatLngs = table.LatLngs.OrderBy(pt => pt.Id).ToList();
       }
-      return parcel;
+      return table;
     }
 
-    public async Task<Parcel> UpsertAsync(short id, string? name, List<ParcelPoint> latLngs)
+    public async Task<Table> UpsertAsync(short id, string? name, List<TablePoint> latLngs)
     {
-      var existing = await _context.Parcels
-        .FirstOrDefaultAsync(p => p.Id == id);
+      var existing = await _context.Tables
+        .FirstOrDefaultAsync(t => t.Id == id);
 
       if (existing == null)
       {
-        var parcel = new Parcel
+        var table = new Table
         {
           Id = id,
           Name = name,
           LatLngs = latLngs,
         };
-        _context.Parcels.Add(parcel);
+        _context.Tables.Add(table);
         await _context.SaveChangesAsync();
-        return parcel;
+        return table;
       }
 
       existing.Name = name;
 
       // Drop old points via direct SQL — avoids tracking/concurrency snags on
       // batched DELETEs and is a single round-trip.
-      await _context.ParcelPoints
-        .Where(pt => pt.ParcelId == id)
+      await _context.TablePoints
+        .Where(pt => pt.TableId == id)
         .ExecuteDeleteAsync();
 
       foreach (var pt in latLngs)
       {
         pt.Id = 0;
-        pt.ParcelId = existing.Id;
-        _context.ParcelPoints.Add(pt);
+        pt.TableId = existing.Id;
+        _context.TablePoints.Add(pt);
       }
       await _context.SaveChangesAsync();
 
-      var reloaded = await _context.Parcels
-        .Include(p => p.LatLngs)
+      var reloaded = await _context.Tables
+        .Include(t => t.LatLngs)
         .AsNoTracking()
-        .FirstAsync(p => p.Id == id);
+        .FirstAsync(t => t.Id == id);
       reloaded.LatLngs = reloaded.LatLngs.OrderBy(pt => pt.Id).ToList();
       return reloaded;
     }
 
     public async Task<bool> DeleteAsync(short id)
     {
-      var parcel = await _context.Parcels
-        .Include(p => p.LatLngs)
-        .FirstOrDefaultAsync(p => p.Id == id);
+      var table = await _context.Tables
+        .Include(t => t.LatLngs)
+        .FirstOrDefaultAsync(t => t.Id == id);
 
-      if (parcel == null) return false;
+      if (table == null) return false;
 
-      _context.Parcels.Remove(parcel);
+      _context.Tables.Remove(table);
       await _context.SaveChangesAsync();
       return true;
     }
@@ -110,7 +110,7 @@ namespace Infrastructure.ParcelRepo
 
     public void MarkGraveModified(Grave grave)
     {
-      _context.Entry(grave).Property(g => g.Parcel).IsModified = true;
+      _context.Entry(grave).Property(g => g.Table).IsModified = true;
     }
 
     public Task SaveAsync()

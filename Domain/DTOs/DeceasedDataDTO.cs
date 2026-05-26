@@ -1,4 +1,4 @@
-﻿using Domain.Models;
+using Domain.Models;
 
 namespace Domain.DTOs
 {
@@ -9,8 +9,7 @@ namespace Domain.DTOs
         public DateTime DateOfDeath { get; set; }
         public DateTime DateOfBirth { get; set; }
         public ICollection<Message> MessageList { get; set; } = new List<Message>();
-        public char GraveTable { get; set; }
+        public short GraveTable { get; set; }
         public short GraveRow { get; set; }
-        public short GraveParcel { get; set; }
     }
 }

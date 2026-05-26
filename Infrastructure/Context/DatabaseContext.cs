@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Domain.Models;
@@ -18,8 +18,8 @@ namespace Infrastructure.Context
     public DbSet<Point> Points { get; set; }
     public DbSet<Deceased> DeceasedItems { get; set; }
     public DbSet<Message> MessageItems { get; set; }
-    public DbSet<Parcel> Parcels { get; set; }
-    public DbSet<ParcelPoint> ParcelPoints { get; set; }
+    public DbSet<Domain.Models.Table> Tables { get; set; }
+    public DbSet<TablePoint> TablePoints { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,14 +43,14 @@ namespace Infrastructure.Context
         .HasForeignKey(m => m.DeceasedId)
         .OnDelete(DeleteBehavior.Cascade);
 
-      modelBuilder.Entity<Parcel>()
-        .Property(p => p.Id)
+      modelBuilder.Entity<Domain.Models.Table>()
+        .Property(t => t.Id)
         .ValueGeneratedNever();
 
-      modelBuilder.Entity<Parcel>()
-        .HasMany(p => p.LatLngs)
-        .WithOne(pt => pt.Parcel)
-        .HasForeignKey(pt => pt.ParcelId)
+      modelBuilder.Entity<Domain.Models.Table>()
+        .HasMany(t => t.LatLngs)
+        .WithOne(pt => pt.Table)
+        .HasForeignKey(pt => pt.TableId)
         .OnDelete(DeleteBehavior.Cascade);
     }
   }

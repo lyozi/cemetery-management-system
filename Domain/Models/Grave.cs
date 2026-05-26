@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -10,14 +10,13 @@ using System.Xml.Linq;
 
 namespace Domain.Models
 {
-  [Index(nameof(Table), nameof(Row), nameof(Parcel))]
+  [Index(nameof(Table), nameof(Row))]
   public class Grave
   {
     [Key]
     public long Id { get; set; }
-    public char Table { get; set; } = 'Z';
+    public short Table { get; set; }
     public short Row { get; set; }
-    public short Parcel { get; set; }
     public short Type { get; set; }
     public string? ImageUrl { get; set; }
 
